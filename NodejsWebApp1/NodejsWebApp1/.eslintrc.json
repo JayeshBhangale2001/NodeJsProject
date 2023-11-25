@@ -1,0 +1,18 @@
+{
+    "parserOptions": {
+        "ecmaVersion": 2021,
+        "sourceType": "module"
+    },
+    "env": {
+        "browser": true,
+        "node": true,
+        "es2021": true
+    },
+    "extends": "eslint:recommended",
+    "rules": {
+        // Add rules for modern syntax
+        "arrow-body-style": "error", // Enforce arrow function body style
+        "prefer-arrow-callback": "error", // Prefer arrow callbacks
+        "template-curly-spacing": "error" // Enforce spacing in template literals
+    }
+}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        /* Hide the signup form initially */
+        #signupForm {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-signup">
+        <form id="loginForm" action="/login" method="post">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required><br><br>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required><br><br>
+            <input type="submit" value="Login">
+            <button type="button" id="showSignup">Sign Up</button>
+        </form>
+
+        <!-- New signup form -->
+        <form id="signupForm" action="/signup" method="post">
+            <label for="signupUsername">Username:</label>
+            <input type="text" id="signupUsername" name="signupUsername" required><br><br>
+            <label for="signupPassword">Password:</label>
+            <input type="password" id="signupPassword" name="signupPassword" required><br><br>
+            <label for="confirmPassword">Confirm Password:</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" required><br><br>
+            <input type="submit" value="Sign Up">
+            <button type="button" id="showLogin">Login</button>
+        </form>
+
+
+        <!-- Link your JavaScript file -->
+        <script src="dashboard.js"></script>
+    </div>
+</body>
+</html>

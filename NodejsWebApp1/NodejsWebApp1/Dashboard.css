@@ -1,0 +1,194 @@
+/* Global styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    text-align: center;
+    background-color: #f4f4f4; /* Added background color */
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 20px; /* Added margin at the bottom */
+    font-size: 28px; /* Increased font size */
+}
+
+button {
+    padding: 12px 24px; /* Increased padding */
+    margin: 12px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px; /* Rounded corners */
+    font-size: 16px; /* Increased font size */
+}
+
+/* Birthday table styles */
+.birthday-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 20px;
+}
+
+    .birthday-table th,
+    .birthday-table td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+    }
+
+    .birthday-table th {
+        background-color: #f2f2f2;
+        color: #333;
+    }
+
+    .birthday-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .birthday-table tr:hover {
+        background-color: #f1f1f1;
+    }
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Modal content styles */
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 30px;
+    border: 1px solid #888;
+    width: 60%;
+    display: flex; /* Updated to use flexbox */
+    flex-direction: column; /* Vertically align content */
+    align-items: center; /* Center content horizontally */
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+/* Reset default margin and padding */
+body,
+h2 {
+    margin: 0;
+    padding: 0;
+}
+
+/* Apply styles to specific IDs */
+h2 {
+    color: #333;
+}
+
+#imageUploadForm {
+    font-family: Arial, sans-serif;
+    margin: 30px;
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 30px;
+    font-size: 24px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#imageInput {
+    margin-bottom: 10px;
+    padding: 12px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+#uploadButton {
+    padding: 12px 24px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    font-size: 16px;
+     margin-bottom: 10px;
+}
+
+    #uploadButton:hover {
+        background-color: #45a049;
+    }
+
+/* Define a CSS class */
+.profile-pic {
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    margin-bottom: 30px;
+    border: 3px solid #fff;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+#labelAndInput {
+    display: flex;
+    align-items: flex-start;
+}
+
+.labels,
+.inputs {
+    display: flex;
+    flex-direction: column;
+    margin-right: 20px; /* Adjust as needed for spacing */
+}
+
+/* Style adjustments for labels */
+label {
+    margin-bottom: 38px; /* Adjust as needed for spacing */
+}
+
+/* Style adjustments for inputs */
+input {
+    margin-bottom: 20px; /* Adjust as needed for spacing */
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+/* Adjustments for smaller screens */
+@media screen and (max-width: 600px) {
+    #labelAndInput {
+        display: block; /* Change to block for smaller screens */
+    }
+
+    label {
+        width: 100%;
+        text-align: left;
+    }
+
+    input[type="text"],
+    input[type="date"] {
+        width: 100%;
+    }
+}

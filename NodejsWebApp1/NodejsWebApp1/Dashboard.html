@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/Dashboard.css">
+    <style>
+        /* Add any additional styles or overrides here */
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>Welcome to the Dashboard!</h1>
+
+        <div id="content">
+            <!-- Content will be populated dynamically -->
+        </div>
+
+        <div id="birthdayForm" style="display: none;">
+            <select id="userDropdown"></select>
+            <input type="date" id="birthdayDate">
+            <button id="saveBirthday">Save</button>
+        </div>
+
+        <button id="PersonalInfo">Profile</button>
+        <button id="showBirthdays">Show Teammates' Birthdays</button>
+        <button id="addBirthdayInformation">Add Birthday Information</button>
+        <button id="addContribution">Add Birthday Contribution</button>
+
+        <div id="personalInfoModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Profile</h2>
+                <div id="imageUploadForm">
+                    <div>
+                        <img id="profileImage" src="/getProfileImage" alt="Profile Image" class="profile-pic">
+                    </div>
+                    <h3>Upload an Image</h3>
+                    <form action="/upload" method="post" enctype="multipart/form-data">
+                        <input type="file" id="imageInput" name="image" accept="image/*">
+                        <input type="submit" id="uploadButton" value="Upload">
+                    </form>
+                </div>
+                <div id="labelAndInput">
+                    <div class="labels">
+                        <label for="username">Username:</label>
+                        <label for="name">Name:</label>
+                        <label for="mobile">Mobile No:</label>
+                        <label for="birthdate">Birthdate:</label>
+                    </div>
+                    <div class="inputs">
+                        <input type="text" id="username" readonly>
+                        <input type="text" id="name">
+                        <input type="text" id="mobile">
+                        <input type="date" id="birthdate">
+                    </div>
+                </div>
+
+                <button id="savePersonalInfo">Save</button>
+
+
+            </div>
+        </div>
+        <span id="usernamePlaceholder" style="display: none;"></span>
+
+        <!-- Link your JavaScript file -->
+        <script src="dashboard.js"></script>
+    </div>
+</body>
+</html>
