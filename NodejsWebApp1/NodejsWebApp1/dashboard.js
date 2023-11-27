@@ -1,8 +1,28 @@
 const serverConfig = {
-    baseURL: 'http://localhost:1337' // Update this with your server's address
+    baseURL: 'http://10.85.81.228:1337' // Update this with your server's address
 };
+function extractLoggedInUsername() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('username');
+}
+
+const username = extractLoggedInUsername();
+
+function displayLoggedInUsername() {
+    if (username) {
+        const usernameDisplay = document.getElementById('username-display');
+        if (usernameDisplay) {
+            usernameDisplay.textContent = `Logged in as: ${username}`;
+        }
+    }
+}
+
+
+document.addEventListener('DOMContentLoaded', displayLoggedInUsername);
 
 document.addEventListener('DOMContentLoaded', function () {
+
+
     // Login and signup functionality
     const loginSignup = document.querySelector('.login-signup');
     if (loginSignup) {
@@ -34,33 +54,30 @@ document.addEventListener('DOMContentLoaded', function () {
                         output += '<tr><th>Username</th><th>Birthday</th></tr>';
 
                         data.forEach(item => {
-                            output += `<tr data-id="${item.id}">`;
-                            output += `<td>${item.username}</td>`;
-                            output += `<td>${item.BirthDate}</td>`;
+                            output += '<tr>';
+                            output += `<td>${item.USERNAME}</td>`;
+                            output += `<td>${item.BIRTHDATE}</td>`;
                             output += '</tr>';
                         });
 
                         output += '</table>';
                         document.getElementById('content').innerHTML = output;
                     })
-                    .catch(error => console.error('Error:', error));
+                    .catch(error => console.error('Error fetching birthdays:', error));
             } else if (targetId === 'PersonalInfo') {
-                fetch(`${serverConfig.baseURL}/getLoggedInUsername`)
-                    .then(response => response.text())
-                    .then(username => {
-                        const usernameInput = document.getElementById('username');
-                        if (usernameInput) {
-                            usernameInput.value = username; // Set the username field in the modal
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching username:', error);
-                    });
-                fetch(`${serverConfig.baseURL}/user-info`)
+                // Find the image element by its ID
+                const profileImage = document.getElementById('profileImage');
+
+                // Set the 'src' attribute of the image dynamically using the username
+                profileImage.src = `/getProfileImage/${username}`;
+
+                document.getElementById('username').value = username;
+
+                fetch(`${serverConfig.baseURL}/user-info/${username}`)
                     .then(response => response.json())
                     .then(userInfo => {
-                        document.getElementById('name').value = userInfo.Name_of_user;
-                        document.getElementById('mobile').value = userInfo.Mobile_No;
+                        document.getElementById('name').value = userInfo.Name;
+                        document.getElementById('mobile').value = userInfo.MobileNo;
                         document.getElementById('birthdate').value = userInfo.BirthDate;
                     })
                     .catch(error => {
@@ -73,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const mobile = document.getElementById('mobile').value;
                 const birthdate = document.getElementById('birthdate').value;
 
-                fetch(`${serverConfig.baseURL}/update-user-info`, {
+                fetch(`${serverConfig.baseURL}/update-user-info/${username}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

@@ -11,6 +11,7 @@
 <body>
     <div class="dashboard">
         <h1>Welcome to the Dashboard!</h1>
+        <p id="username-display"></p>
 
         <div id="content">
             <!-- Content will be populated dynamically -->
@@ -33,7 +34,7 @@
                 <h2>Profile</h2>
                 <div id="imageUploadForm">
                     <div>
-                        <img id="profileImage" src="/getProfileImage" alt="Profile Image" class="profile-pic">
+                        <img id="profileImage" src="" alt="Profile Image" class="profile-pic">
                     </div>
                     <h3>Upload an Image</h3>
                     <form action="/upload" method="post" enctype="multipart/form-data">

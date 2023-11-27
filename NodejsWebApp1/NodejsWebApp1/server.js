@@ -1,7 +1,8 @@
-
+/*
 const express = require('express');
 const path = require('path');
-const mysql = require('mysql2');
+//const mysql = require('mysql2');
+const oracledb = require('oracledb');
 const multer = require('multer');
 const fs = require('fs');
 const cors = require('cors');
@@ -11,32 +12,43 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const port = process.env.PORT || 1337;
-
-const corsOptions = {
-    origin: 'http://localhost:1337',
-    credentials: true  // Enable credentials (cookies, authorization headers, etc.)
-};
 
 app.use(cors(corsOptions));
 
 const session = require('express-session');
 
 // MySQL database connection
-const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'Jayesh',
-    password: 'Jayesh@2001',
-    database: 'myapp' // Your database name
-});
+const dbConfig = {
+    user: 'iqms',
+    password: 'iqms',
+    connectString: 'dwpd02244:1521/IQORA' // Replace with your connection string
+};
 
-connection.connect((err) => {
-    if (err) {
-        console.error('Error connecting to database:', err);
-        return;
+let connection;
+async function run() {
+   
+
+    try {
+        connection = await oracledb.getConnection(dbConfig);
+        console.log('Connected to Oracle Database');
+
+        // Your code for executing queries or operations goes here
+
+    } catch (err) {
+        console.error('Error connecting to Oracle Database:', err);
+    } finally {
+        if (connection) {
+            try {
+                await connection.close();
+                console.log('Connection to Oracle Database closed');
+            } catch (err) {
+                console.error('Error closing connection:', err);
+            }
+        }
     }
-    console.log('Connected to database');
-});
+}
+
+run();
 
 app.use(session({
     secret: 'your_secret_key',
@@ -138,29 +150,38 @@ app.get('/birthday/:userId', (req, res) => {
     });
 });
 
-app.post('/update-user-info', (req, res) => {
+app.post('/update-user-info/:username', async (req, res) => {
     const { name, mobile, birthdate } = req.body;
-    const loggedInUsername = req.session.username;
+    const { username } = req.params;
 
-    const query = `
-    UPDATE users_birthdays AS ub
-    SET ub.Name_of_user = ?, ub.Mobile_No = ?, ub.BirthDate = ?
-    WHERE ub.username = ?;
-`;
+    try {
+        const connection = await oracledb.getConnection(dbConfig);
 
-    console.log('SQL Query:', query);
-    connection.query(query, [name, mobile, birthdate, loggedInUsername], (error, results) => {
-        if (error) {
-            res.status(500).send('Error updating personal information');
-            console.error('Error updating personal information:', error);
+        const query = `
+            UPDATE users_information
+            SET Name = :name, MobileNo = :mobile, BirthDate = TO_DATE(:birthdate, 'YYYY-MM-DD')
+            WHERE username = :username
+        `;
+
+        const binds = {
+            name,
+            mobile,
+            birthdate,
+            username,
+        };
+
+        const result = await connection.execute(query, binds, { autoCommit: true });
+        await connection.close();
+
+        if (result.rowsAffected > 0) {
+            res.send('Personal information updated successfully!');
         } else {
-            if (results.affectedRows > 0) {
-                res.send('Personal information updated successfully!');
-            } else {
-                res.status(400).send('No user found or no change detected');
-            }
+            res.status(400).send('No user found or no change detected');
         }
-    });
+    } catch (error) {
+        console.error('Error updating personal information:', error);
+        res.status(500).send('Error updating personal information');
+    }
 });
 
 app.get('/user-info', (req, res) => {
@@ -249,8 +270,323 @@ app.get('/getProfileImage', (req, res) => {
 });
 
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}/`);
+//app.listen(port, () => {
+//    console.log(`Server running at http://localhost:${port}/`);
+//});
+
+
+*/
+
+
+const express = require('express');
+const path = require('path');
+const oracledb = require('oracledb');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
+const fs = require('fs');
+const cors = require('cors');
+const session = require('express-session');
+//const OracleSession = require('express-oracle-session')(session);
+const app = express();
+const corsOptions = {
+    origin: 'http://localhost:1337',
+    credentials: true
+};
+
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(session({ secret: 'your_secret_key', resave: false, saveUninitialized: false }));
+app.use(express.static(path.join(__dirname)));
+
+/*
+const sessionOptions = {
+    // Oracle DB configuration
+    store: new OracleSession({
+        // Oracle configuration options
+        user: 'iqms',
+        password: 'iqms',
+        connectString: 'dwpd02244:1521/IQORA', // Replace with your Oracle connection string
+        table: 'sessions' // Table name to store sessions
+    }),
+    secret: 'your_secret_key',
+    resave: false,
+    saveUninitialized: false
+};
+
+app.use(session(sessionOptions));
+*/
+
+const dbConfig = {
+    user: 'iqms',
+    password: 'iqms',
+    connectString: 'dwpd02244:1521/IQORA'
+};
+
+let connection;
+
+async function connectToDatabase() {
+    try {
+        connection = await oracledb.getConnection(dbConfig);
+        console.log('Connected to Oracle Database');
+    } catch (err) {
+        console.error('Error connecting to Oracle Database:', err);
+    }
+}
+
+connectToDatabase();
+
+
+
+
+// Handle user login
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+    try {
+        const query = `SELECT * FROM users WHERE username='${username}' AND password='${password}'`;
+        const result = await connection.execute(query);
+        if (result.rows.length > 0) {
+            req.session.username = username;
+            // Redirect to Dashboard.html with the username as a query parameter
+            res.redirect(`/Dashboard.html?username=${username}`);
+        } else {
+            res.status(401).send('Invalid credentials');
+        }
+    } catch (err) {
+        console.error('Error during login:', err);
+        res.status(500).send('Server Error');
+    }
+});
+
+app.post('/signup', async (req, res) => {
+    const { signupUsername, signupPassword, confirmPassword } = req.body;
+
+    if (signupPassword !== confirmPassword) {
+        return res.status(400).send('Passwords do not match');
+    }
+
+    try {
+        const connection = await oracledb.getConnection(dbConfig);
+
+        const insertQuery = `INSERT INTO users (username, password) VALUES (:signupUsername, :signupPassword)`;
+        const binds = {
+            signupUsername,
+            signupPassword
+        };
+
+        const options = {
+            autoCommit: true // Assuming auto-commit is desired after the insert operation
+        };
+
+        const result = await connection.execute(insertQuery, binds, options);
+        await connection.close();
+
+        res.send('Signed up successfully! Proceed to login.');
+    } catch (error) {
+        console.error('Error signing up:', error);
+        res.status(500).send('Error signing up');
+    }
 });
 
 
+app.get('/teammates-birthdays', async (req, res) => {
+    try {
+        const connection = await oracledb.getConnection(dbConfig);
+
+        const query = 'SELECT USERNAME, TO_CHAR(BIRTHDATE, \'YYYY-MM-DD\') AS BIRTHDATE FROM users_information';
+
+        const result = await connection.execute(query);
+
+        await connection.close();
+
+        const formattedResult = result.rows.map(row => ({
+            USERNAME: row[0], // Assuming USERNAME is the first column in the query result
+            BIRTHDATE: row[1] // Assuming BIRTHDATE is the second column in the query result
+        }));
+        res.json(formattedResult); // Send the fetched data as JSON response
+    } catch (error) {
+        console.error('Error fetching birthdays:', error);
+        res.status(500).send('Server Error');
+    }
+});
+
+app.get('/user-info/:username', async (req, res) => {
+    const { username } = req.params; // Get the username from the route parameter
+
+
+    try {
+        const connection = await oracledb.getConnection(dbConfig);
+
+        const query = `SELECT Name, MobileNo, TO_CHAR(BirthDate, 'YYYY-MM-DD') AS BirthDate FROM users_information WHERE username = :username`;
+
+        const result = await connection.execute(query, { username });
+        await connection.close();
+
+        if (result.rows.length > 0) {
+            const userInfo = {
+                Name: result.rows[0][0],
+                MobileNo: result.rows[0][1],
+                BirthDate: result.rows[0][2]
+            };
+            res.json(userInfo);
+        } else {
+            res.status(404).send('User not found');
+        }
+    } catch (error) {
+        console.error('Error fetching user info:', error);
+        res.status(500).send('Server Error');
+    }
+});
+
+
+app.post('/update-user-info/:username', async (req, res) => {
+    const { name, mobile, birthdate } = req.body;
+    const { username } = req.params;
+
+    try {
+        const connection = await oracledb.getConnection(dbConfig);
+
+        const query = `
+            UPDATE users_information
+            SET Name = :name, MobileNo = :mobile, BirthDate = TO_DATE(:birthdate, 'YYYY-MM-DD')
+            WHERE username = :username
+        `;
+
+        const binds = {
+            name,
+            mobile,
+            birthdate,
+            username,
+        };
+
+        const result = await connection.execute(query, binds, { autoCommit: true });
+        await connection.close();
+
+        if (result.rowsAffected > 0) {
+            res.send('Personal information updated successfully!');
+        } else {
+            res.status(400).send('No user found or no change detected');
+        }
+    } catch (error) {
+        console.error('Error updating personal information:', error);
+        res.status(500).send('Error updating personal information');
+    }
+});
+
+
+app.post('/upload', upload.single('image'), async (req, res) => {
+    const imageFile = req.file;
+
+    if (!imageFile) {
+        res.status(400).send('Please upload an image');
+        return;
+    }
+
+    try {
+        const imageBuffer = fs.readFileSync(imageFile.path);
+        const loggedInUsername = req.session.username;
+
+        const connection = await oracledb.getConnection(dbConfig);
+
+        const query = `
+            UPDATE users_information
+            SET profile_image = :imageBuffer
+            WHERE username = :loggedInUsername
+        `;
+
+        const binds = {
+            imageBuffer,
+            loggedInUsername,
+        };
+
+        const result = await connection.execute(query, binds, { autoCommit: true });
+        await connection.close();
+
+        console.log('Image inserted successfully!');
+        res.send('Image uploaded and inserted into the database');
+    } catch (error) {
+        console.error('Error inserting image:', error);
+        res.status(500).send('Error inserting image');
+    }
+});
+
+
+
+
+app.get('/getProfileImage/:username', async (req, res) => {
+    const { username } = req.params;
+
+    try {
+        const connection = await oracledb.getConnection(dbConfig);
+
+        const query = 'SELECT profile_image FROM users_information WHERE username = :username';
+
+        const result = await connection.execute(query, { username });
+
+        if (result.rows.length > 0 && result.rows[0].PROFILE_IMAGE) {
+            const imageData = result.rows[0].PROFILE_IMAGE;
+
+            if (imageData) {
+                const contentType = 'image/jpeg'; // Set the content type based on your image type
+
+                res.writeHead(200, {
+                    'Content-Type': contentType,
+                    'Content-Length': imageData.length
+                });
+
+                res.end(imageData, 'binary');
+            } else {
+                res.status(404).send('Image data not found or empty');
+            }
+        } else {
+            res.status(404).send('Image not found');
+        }
+
+        await connection.close();
+    } catch (error) {
+        console.error('Error fetching profile image:', error);
+        res.status(500).send('Error fetching profile image');
+    }
+});
+
+
+
+/*
+
+app.get('/getLoggedInUsername', (req, res) => {
+    const loggedInUsername = req.session.username;
+
+    if (!loggedInUsername) {
+        res.status(401).send('User not logged in');
+        return;
+    }
+
+    res.send(loggedInUsername);
+});
+
+*/
+
+
+// Other routes and functionalities...
+
+// Close the OracleDB connection on process termination
+
+
+process.on('SIGINT', async () => {
+    try {
+        if (connection) {
+            await connection.close();
+            console.log('Oracle Database connection closed');
+        }
+        process.exit(0);
+    } catch (err) {
+        console.error('Error closing Oracle Database connection:', err);
+        process.exit(1);
+    }
+});
+
+// Start the server
+const port = process.env.PORT || 1337;
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}/`);
+});
