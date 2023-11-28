@@ -551,6 +551,105 @@ app.get('/getProfileImage/:username', async (req, res) => {
 
 
 
+app.get('/fetchData', async (req, res) => {
+    try {
+        const connection = await oracledb.getConnection(dbConfig);
+
+        const query = `
+            SELECT username, name, mobileno
+            FROM users_information
+        `;
+
+        const result = await connection.execute(query);
+        await connection.close();
+
+        const rows = result.rows.map(row => ({
+            USERNAME: row[0],
+            NAME: row[1],
+            MOBILENO: row[2]
+        }));
+
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        res.status(500).send('Error fetching data');
+    }
+});
+
+app.get('/fetchName/:username', async (req, res) => {
+    const { username } = req.params;
+
+    try {
+        const connection = await oracledb.getConnection(dbConfig);
+
+        const query = `
+            SELECT Name
+            FROM users_information
+            WHERE username = :username
+        `;
+
+        const binds = [username];
+        const result = await connection.execute(query, binds);
+
+        await connection.close();
+
+        if (result.rows.length > 0) {
+            res.json({ name: result.rows[0][0] });
+        } else {
+            res.status(404).send('Name not found for the given username');
+        }
+    } catch (error) {
+        console.error('Error fetching name:', error);
+        res.status(500).send('Error fetching name');
+    }
+});
+
+app.get('/fetchBirthdayPersons', async (req, res) => {
+    try {
+        const connection = await oracledb.getConnection(dbConfig);
+
+        const query = `
+            SELECT username, Name
+            FROM users_information
+        `;
+
+        const result = await connection.execute(query);
+        await connection.close();
+
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching birthday persons:', error);
+        res.status(500).send('Error fetching birthday persons');
+    }
+});
+
+
+app.post('/saveContribution', async (req, res) => {
+    const { username, name, selectedPerson, amount, note } = req.body;
+
+    try {
+        // Oracle DB connection
+        const connection = await oracledb.getConnection(dbConfig);
+
+        // Prepare SQL statement
+        const sql = `
+      INSERT INTO Birthday_Contribution (username, Name, BirthDay_Person, Amount, Note) 
+      VALUES (:username, :name, :selectedPerson, :amount, :note)
+    `;
+
+        const binds = { username, name, selectedPerson, amount, note };
+
+        // Execute SQL statement
+        const result = await connection.execute(sql, binds, { autoCommit: true });
+
+        console.log('Contribution saved successfully!');
+        res.status(200).send('Contribution saved successfully!');
+    } catch (error) {
+        console.error('Error saving contribution:', error);
+        res.status(500).send('Failed to save contribution');
+    }
+});
+
 /*
 
 app.get('/getLoggedInUsername', (req, res) => {

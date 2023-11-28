@@ -64,8 +64,66 @@
         </div>
         <span id="usernamePlaceholder" style="display: none;"></span>
 
-        <!-- Link your JavaScript file -->
-        <script src="dashboard.js"></script>
+
+        <h1>Birthday Contributions</h1>
+
+        <button id="addContributionBtn">Add Contribution</button>
+
+        <div id="contributionForm" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Add Contribution</h2>
+                <div id="contributionInputs">
+                    <label for="contributionUsername">Username:</label>
+                    <input type="text" id="contributionUsername" readonly>
+
+                    <label for="contributionName">Name:</label>
+                    <input type="text" id="contributionName" readonly>
+
+                    <label for="birthdayPerson">Birthday Person:</label>
+                    <select id="birthdayPersonDropdown">
+                        <!-- Populate this dropdown dynamically -->
+                    </select>
+
+                    <label for="contributionAmount">Amount:</label>
+                    <input type="number" id="contributionAmount" placeholder="Enter amount">
+
+                    <label for="contributionNote">Note:</label>
+                    <textarea id="contributionNote" placeholder="Enter note"></textarea>
+
+                    <button id="saveContribution">Save</button>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+
+
+        <div class="table-container">
+            <h1>Table with Filtering</h1>
+            <div class="filter-section">
+                <select id="filterColumn">
+                    <option value="0">Username</option>
+                    <option value="1">Name</option>
+                    <option value="2">Mobile No</option>
+                </select>
+                <input type="text" id="filterInput" placeholder="Filter table...">
+            </div>
+            <table id="dataTable">
+                <!-- Table content will be dynamically added here -->
+            </table>
+        </div>
+
+
+
+
+
     </div>
+
+    <!-- Link your JavaScript file -->
+    <script src="dashboard.js"></script>
 </body>
 </html>
