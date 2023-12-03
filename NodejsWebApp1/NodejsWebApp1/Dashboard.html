@@ -13,21 +13,20 @@
         <h1>Welcome to the Dashboard!</h1>
         <p id="username-display"></p>
 
+        <button id="PersonalInfo">Profile</button>
+        <button id="showBirthdays">Show Teammates' Birthdays</button>
+        <button id="addContributionBtn">Add Contribution</button>
+        <button id="ShowMyContribution">Show My Contributions</button>
+        <button id="Add_ExpenseBtn">Add Expenses</button>
+        <button id="ShowExpenses">Show Expenses</button>
+        <button id="editExpenseBtn">ExpenseBtn</button>
+
         <div id="content">
             <!-- Content will be populated dynamically -->
         </div>
-
-        <div id="birthdayForm" style="display: none;">
-            <select id="userDropdown"></select>
-            <input type="date" id="birthdayDate">
-            <button id="saveBirthday">Save</button>
+        <div id="ShowExpenseTable">
+            <!-- Content will be populated dynamically -->
         </div>
-
-        <button id="PersonalInfo">Profile</button>
-        <button id="showBirthdays">Show Teammates' Birthdays</button>
-        <button id="addBirthdayInformation">Add Birthday Information</button>
-        <button id="addContribution">Add Birthday Contribution</button>
-
         <div id="personalInfoModal" class="modal" style="display: none;">
             <div class="modal-content">
                 <span class="close">&times;</span>
@@ -58,70 +57,101 @@
                 </div>
 
                 <button id="savePersonalInfo">Save</button>
-
-
             </div>
         </div>
+
         <span id="usernamePlaceholder" style="display: none;"></span>
-
-
-        <h1>Birthday Contributions</h1>
-
-        <button id="addContributionBtn">Add Contribution</button>
 
         <div id="contributionForm" class="modal" style="display: none;">
             <div class="modal-content">
                 <span class="close">&times;</span>
                 <h2>Add Contribution</h2>
-                <div id="contributionInputs">
-                    <label for="contributionUsername">Username:</label>
-                    <input type="text" id="contributionUsername" readonly>
+                <div class="form-container">
+                    <div class="input-column">
+                        <div id="contributionInputs">
+                            <label for="contributionUsername" class="grey-label">Username:</label>
+                            <input type="text" id="contributionUsername" class="non-focusable-input" readonly>
 
-                    <label for="contributionName">Name:</label>
-                    <input type="text" id="contributionName" readonly>
+                            <label for="contributionName" class="grey-label">Name:</label>
+                            <input type="text" id="contributionName" class="non-focusable-input" readonly>
 
-                    <label for="birthdayPerson">Birthday Person:</label>
-                    <select id="birthdayPersonDropdown">
-                        <!-- Populate this dropdown dynamically -->
-                    </select>
+                            <label for="birthdayPerson">Birthday Person:</label>
+                            <select id="birthdayPersonDropdown">
+                                <!-- Populate this dropdown dynamically -->
+                            </select>
 
-                    <label for="contributionAmount">Amount:</label>
-                    <input type="number" id="contributionAmount" placeholder="Enter amount">
+                            <label for="contributionAmount">Amount:</label>
+                            <input type="number" id="contributionAmount" placeholder="Enter amount">
 
-                    <label for="contributionNote">Note:</label>
-                    <textarea id="contributionNote" placeholder="Enter note"></textarea>
+                            <label for="contributionNote">Note:</label>
+                            <textarea id="contributionNote" placeholder="Enter note"></textarea>
 
-                    <button id="saveContribution">Save</button>
+                            <button id="saveContribution">Save</button>
+                        </div>
+                    </div>
+                    <div class="qrcode-column">
+                        <div id="QRCode">
+                            <img src="Data/QRCode.png" alt="9325548909@paytm">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-
-
-
-
-
-
-        <div class="table-container">
-            <h1>Table with Filtering</h1>
-            <div class="filter-section">
-                <select id="filterColumn">
-                    <option value="0">Username</option>
-                    <option value="1">Name</option>
-                    <option value="2">Mobile No</option>
-                </select>
-                <input type="text" id="filterInput" placeholder="Filter table...">
+        <div id="Contribution_Table" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="table-container">
+                    <span class="close">&times;</span>
+                    <h2>Check Your Contributions</h2>
+                    <div class="filter-section">
+                        <select id="filterColumn">
+                            <option value="0">Birthday Person</option>
+                            <option value="1">Amount</option>
+                            <option value="2">Note</option>
+                            <option value="3">Contribution_Date</option>
+                        </select>
+                        <input type="text" id="filterInput" placeholder="Filter table...">
+                    </div>
+                    <table id="dataTable">
+                        <!-- Table content will be dynamically added here -->
+                    </table>
+                </div>
             </div>
-            <table id="dataTable">
-                <!-- Table content will be dynamically added here -->
-            </table>
+
         </div>
 
-
-
-
-
     </div>
+
+    <div id="AddExpenseForm" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add Expense</h2>
+            <div class="form-container">
+                <div id="contributionInputs">
+                    <label for="ExpenseTitle">Expense Title:</label>
+                    <input type="text" id="ExpenseTitle">
+
+                    <label for="Amount">Amount (Rs)</label>
+                    <input type="number" id="Amount">
+
+                    <label for="birthdayPerson">Birthday Person:</label>
+                    <select id="expenseBirthdayPersonDropdown">
+                        <!-- Populate this dropdown dynamically -->
+                    </select>
+
+                    <label for="ExpenseNote">Note:</label>
+                    <textarea id="ExpenseNote" placeholder="Enter note"></textarea>
+
+                    <button id="saveExpenseBtn">Save</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
 
     <!-- Link your JavaScript file -->
     <script src="dashboard.js"></script>

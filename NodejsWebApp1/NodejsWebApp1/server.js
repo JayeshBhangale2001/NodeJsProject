@@ -393,15 +393,16 @@ app.get('/teammates-birthdays', async (req, res) => {
     try {
         const connection = await oracledb.getConnection(dbConfig);
 
-        const query = 'SELECT USERNAME, TO_CHAR(BIRTHDATE, \'YYYY-MM-DD\') AS BIRTHDATE FROM users_information';
+        const query = 'SELECT NAME,MobileNo, TO_CHAR(BIRTHDATE, \'YYYY-MM-DD\') AS BIRTHDATE FROM users_information';
 
         const result = await connection.execute(query);
 
         await connection.close();
 
         const formattedResult = result.rows.map(row => ({
-            USERNAME: row[0], // Assuming USERNAME is the first column in the query result
-            BIRTHDATE: row[1] // Assuming BIRTHDATE is the second column in the query result
+            USERNAME: row[0],
+            MOBILENO: row[1],
+            BIRTHDATE: row[2]
         }));
         res.json(formattedResult); // Send the fetched data as JSON response
     } catch (error) {
@@ -438,13 +439,12 @@ app.get('/user-info/:username', async (req, res) => {
     }
 });
 
-
 app.post('/update-user-info/:username', async (req, res) => {
     const { name, mobile, birthdate } = req.body;
     const { username } = req.params;
 
     try {
-        const connection = await oracledb.getConnection(dbConfig);
+        console.log('Received update request for:', username);
 
         const query = `
             UPDATE users_information
@@ -453,25 +453,30 @@ app.post('/update-user-info/:username', async (req, res) => {
         `;
 
         const binds = {
-            name,
-            mobile,
-            birthdate,
-            username,
+            name: name,
+            mobile: mobile,
+            birthdate: birthdate,
+            username: username
         };
 
-        const result = await connection.execute(query, binds, { autoCommit: true });
-        await connection.close();
+        console.log('Before executing query:', query, binds);
 
-        if (result.rowsAffected > 0) {
-            res.send('Personal information updated successfully!');
-        } else {
-            res.status(400).send('No user found or no change detected');
-        }
+        const result = await connection.execute(query, binds);
+        console.log('Query executed successfully:', result);
+
+        await connection.commit();
+        console.log('Changes committed successfully');
+
+        await connection.close();
+        console.log('Connection closed');
+
+        res.status(200).send('Information updated successfully!');
     } catch (error) {
         console.error('Error updating personal information:', error);
         res.status(500).send('Error updating personal information');
     }
 });
+
 
 
 app.post('/upload', upload.single('image'), async (req, res) => {
@@ -556,17 +561,18 @@ app.get('/fetchData', async (req, res) => {
         const connection = await oracledb.getConnection(dbConfig);
 
         const query = `
-            SELECT username, name, mobileno
-            FROM users_information
+            SELECT BirthDay_Person, Amount, Note, TO_CHAR(Contribution_Date, 'YYYY-MM-DD HH24:MI:SS') AS Contribution_Date
+            FROM Birthday_Contribution
         `;
 
         const result = await connection.execute(query);
         await connection.close();
 
         const rows = result.rows.map(row => ({
-            USERNAME: row[0],
-            NAME: row[1],
-            MOBILENO: row[2]
+            BirthDay_Person: row[0],
+            Amount: row[1],
+            Note: row[2],
+            Contribution_Date: row[3]
         }));
 
         res.json(rows);
@@ -575,6 +581,7 @@ app.get('/fetchData', async (req, res) => {
         res.status(500).send('Error fetching data');
     }
 });
+
 
 app.get('/fetchName/:username', async (req, res) => {
     const { username } = req.params;
@@ -624,8 +631,85 @@ app.get('/fetchBirthdayPersons', async (req, res) => {
 });
 
 
-app.post('/saveContribution', async (req, res) => {
-    const { username, name, selectedPerson, amount, note } = req.body;
+async function saveContribution(username, name, selectedPerson, amount, note) {
+    try {
+        const year = new Date().getFullYear();
+        const checkRecordQuery = `
+            SELECT COUNT(*) AS recordCount
+            FROM Birthday_Contribution
+            WHERE username = :username
+            AND BirthDay_Person = :selectedPerson
+            AND Year = :year
+        `;
+
+        const checkRecordParams = {
+            username: username,
+            selectedPerson: selectedPerson,
+            year: year
+        };
+
+        console.log('Executing checkRecordQuery:', checkRecordQuery);
+        console.log('Params:', checkRecordParams);
+
+        const recordCheckResult = await connection.execute(checkRecordQuery, checkRecordParams);
+        console.log('Record Check Result:', recordCheckResult);
+        console.log('Rows:', recordCheckResult.rows);
+        console.log('RECORDCOUNT Value:', recordCheckResult.rows[0].RECORDCOUNT);
+
+        if (recordCheckResult.rows[0][0] > 0) {
+            const updateRecordQuery = `
+                UPDATE Birthday_Contribution
+                SET Amount = :amount,
+                    Note = :note
+                WHERE username = :username
+                AND BirthDay_Person = :selectedPerson
+                AND Year = :year
+            `;
+
+            const updateRecordParams = {
+               
+                amount: amount,
+                note: note,
+                username: username,
+                selectedPerson: selectedPerson,
+                year: year
+            };
+            console.log('Executing checkRecordQuery:', updateRecordQuery);
+            console.log('Params:', updateRecordParams);
+
+            await connection.execute(updateRecordQuery, updateRecordParams);
+            await connection.commit();
+            return 'Contribution updated successfully!';
+        } else {
+            const insertRecordQuery = `
+                INSERT INTO Birthday_Contribution (username, Name, BirthDay_Person, Amount, Note, Year)
+                VALUES (:username, :name, :selectedPerson, :amount, :note, :year)
+            `;
+
+            const insertRecordParams = {
+                username: username,
+                name: name,
+                selectedPerson: selectedPerson,
+                amount: amount,
+                note: note,
+                Year: year
+            };
+
+            await connection.execute(insertRecordQuery, insertRecordParams);
+            await connection.commit(); // Commit the transaction after the query execution
+
+            return 'Contribution inserted successfully!';
+        }
+    } catch (error) {
+        console.error('Error saving Contribution:', error);
+        return 'Failed to save Contribution';
+    }
+}
+
+
+
+app.post('/saveExpenseToDatabase', async (req, res) => {
+    const { Expense_Title, username, name, selectedPerson, amount, note } = req.body;
 
     try {
         // Oracle DB connection
@@ -633,22 +717,62 @@ app.post('/saveContribution', async (req, res) => {
 
         // Prepare SQL statement
         const sql = `
-      INSERT INTO Birthday_Contribution (username, Name, BirthDay_Person, Amount, Note) 
-      VALUES (:username, :name, :selectedPerson, :amount, :note)
+      INSERT INTO Birthday_expenses (Expense_Title, username, Name, BirthDay_Person, Amount, Note) 
+      VALUES (:Expense_Title, :username, :name, :selectedPerson, :amount, :note)
     `;
 
-        const binds = { username, name, selectedPerson, amount, note };
+        const binds = { Expense_Title, username, name, selectedPerson, amount, note };
 
         // Execute SQL statement
         const result = await connection.execute(sql, binds, { autoCommit: true });
 
-        console.log('Contribution saved successfully!');
-        res.status(200).send('Contribution saved successfully!');
+        console.log('expenses saved successfully!');
+        res.status(200).send('expenses saved successfully!');
     } catch (error) {
-        console.error('Error saving contribution:', error);
-        res.status(500).send('Failed to save contribution');
+        console.error('Error saving expenses:', error);
+        res.status(500).send('Failed to save expenses');
     }
 });
+
+app.get('/show-expenses', async (req, res) => {
+    try {
+        const query = `
+            SELECT Expense_Title, username AS Added_By, Birthday_Person , 
+                   Amount, Note, Expense_Date
+            FROM Birthday_expenses
+        `;
+
+        const result = await connection.execute(query);
+
+        const rows = result.rows.map(row => ({
+            Expense_Title: row[0],
+            Added_By: row[1],
+            Birthday_Person: row[2],
+            Amount: row[3],
+            Note: row[4],
+            Expense_Date: row[5]
+        }));
+
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching expenses:', error);
+        res.status(500).json({ success: false, error: 'Error fetching expenses' });
+    }
+});
+
+
+app.post('/saveContribution', async (req, res) => {
+    const { username, name, selectedPerson, amount, note } = req.body;
+
+    try {
+      
+        const result = await saveContribution(username, name, selectedPerson, amount, note);
+        res.status(200).json({ message: result }); 
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to save Contribution' }); 
+    }
+});
+
 
 /*
 
