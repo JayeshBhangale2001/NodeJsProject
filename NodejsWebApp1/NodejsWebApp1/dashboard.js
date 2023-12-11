@@ -1,5 +1,5 @@
 const serverConfig = {
-    baseURL: 'http://10.85.81.228:1337' // Update this with your server's address
+    baseURL: 'http://10.85.81.228:1337' //update this whoever is using with your ip address , port is hardcoded
 };
 
 function extractLoggedInUsername() {
@@ -19,19 +19,19 @@ function displayLoggedInUsername() {
 }
 
 
-// Reusable function to show a loading spinner
+
 function showLoadingSpinner(element) {
 
     console.log('Showing loading spinner');
     if (!element.querySelector('.loading-spinner')) {
         const loadingSpinner = document.createElement('div');
         loadingSpinner.className = 'loading-spinner';
-        loadingSpinner.innerHTML = '<div class="spinner"></div>'; // Add an inner element for styling
+        loadingSpinner.innerHTML = '<div class="spinner"></div>'; 
         element.appendChild(loadingSpinner);
     }
 }
 
-// Reusable function to hide a loading spinner
+
 function hideLoadingSpinner(element) {
     console.log('hide loading spinner');
     const loadingSpinner = element.querySelector('.loading-spinner');
@@ -44,7 +44,7 @@ function hideLoadingSpinner(element) {
 // Variable to store the fetched name
 let fetchedName = '';
 
-// Function to fetch the name from the server
+
 async function fetchNameFromServer(username) {
     try {
         const response = await fetch(`/fetchName/${username}`);
@@ -72,13 +72,13 @@ async function fetchNamesAndPopulateDropdown(dropdownElementId, formElementId) {
             return;
         }
 
-        // Clear previous options
+        
         dropdown.innerHTML = '';
 
         data.forEach(person => {
             const option = document.createElement('option');
             option.value = person[0]; // Username
-            option.textContent = person[1] !== null ? person[1] : 'null'; // Name or 'null'
+            option.textContent = person[1] !== null ? person[1] : 'null';
             dropdown.appendChild(option);
         });
 
@@ -106,20 +106,20 @@ async function saveContributionToDatabase(username, name, selectedPerson, amount
 
         if (response.ok) {
             console.log('Contribution saved successfully!');
-            // Add logic here to handle successful save, if needed
+            alert("Contribution saved successfully!");
         } else {
             console.error('Failed to save contribution');
-            // Add logic here to handle failed save, if needed
+            
         }
     } catch (error) {
         console.error('Error saving contribution:', error);
-        // Add logic here to handle error while saving, if needed
+        
     } finally {
         hideLoadingSpinner(contributionForm);
     }
 }
 
-async function saveExpenseToDatabase(username, name, Expense_Title, selectedPerson, amount, note, ExpenseForm) {
+async function saveExpenseToDatabase(Expense_Title,username, name, selectedPerson, amount, note, ExpenseForm) {
     try {
         const response = await fetch('/saveExpenseToDatabase', {
             method: 'POST',
@@ -131,7 +131,7 @@ async function saveExpenseToDatabase(username, name, Expense_Title, selectedPers
 
         if (response.ok) {
             console.log('Expense saved successfully!');
-
+            alert("Expense saved successfully!");
         } else {
             console.error('Failed to save Expense');
 
@@ -156,14 +156,15 @@ async function handleSavePersonalInfo(name, mobile, birthdate) {
         });
 
         if (response.ok) {
-            // Check if response is JSON before parsing
+            
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 const data = await response.json();
                 console.log('User information updated successfully!');
                 console.log('Response data:', data);
+                alert("User information updated successfully!'");
             } else {
-                // If response is not JSON, handle differently (e.g., assume success)
+                
                 console.log('User information updated successfully!');
             }
         } else {
@@ -177,7 +178,7 @@ async function handleSavePersonalInfo(name, mobile, birthdate) {
 document.addEventListener('DOMContentLoaded', displayLoggedInUsername);
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Login and signup functionality
+    
     const loginSignup = document.querySelector('.login-signup');
     if (loginSignup) {
         loginSignup.addEventListener('click', function (event) {
@@ -196,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 document.addEventListener('DOMContentLoaded', async function () {
-    // Dashboard functionality
+    
     const dashboard = document.querySelector('.dashboard');
 
     if (dashboard) {
@@ -209,13 +210,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             const birthdate = document.getElementById('birthdate').value;
             if (targetId === 'showBirthdays') {
                 console.log('Clicked Show Birthdays');
-                //showLoadingSpinner('dashboard');
+                
                 fetch(`${serverConfig.baseURL}/teammates-birthdays`)
                     .then(response => response.json())
                     .then(data => {
                         console.log('Data received:', data);
                         displayTable(data, ['USERNAME', 'MOBILENO', 'BIRTHDATE'], 'content', 'Team Birthdates');
-                        // hideLoadingSpinner('showBirthdays');
+                        
                     })
                     .catch(error => console.error('Error fetching birthdays:', error));
             } else if (targetId === 'PersonalInfo') {
@@ -231,8 +232,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                     .then(response => response.json())
                     .then(data => {
                         console.log('Data received:', data);
-                        displayTable(data, ['Expense_Title', 'Added_By', 'Birthday Person', 'Amount', 'Note', 'Expense_Date'], 'ShowExpenseTable','Expenses');
-                        // hideLoadingSpinner('showBirthdays');
+                        displayTable(data, ['Expense_Title', 'Added_By', 'Birthday_Person', 'Amount', 'Note', 'Expense_Date'], 'ShowExpenseTable','Expenses');
+                        
                     })
             }
 
@@ -352,7 +353,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             showLoadingSpinner(Contribution_Table)
 
-            fetchData();
+            fetchData(username);
 
             const filterInput = document.getElementById('filterInput');
             const dataTable = document.getElementById('dataTable');
@@ -379,9 +380,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                 filterTable(filterInput.value.trim().toLowerCase(), this.value);
             });
 
-            async function fetchData() {
+            async function fetchData(username) {
                 try {
-                    const response = await fetch('/fetchData');
+                    const response = await fetch(`/fetchData/${username}`);
+
                     const data = await response.json();
                     displayData(data);
                 } catch (error) {
@@ -433,6 +435,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         const ExpenseTitle = document.getElementById('ExpenseTitle');
 
+             
+    console.log('Selected Person:', birthdayPersonNames); // Log selected person
+    console.log('Amount:', ExpenseAmount); // Log amount
+    console.log('Note:', ExpenseNote); // Log note
+    console.log('ExpenseTitle:', ExpenseTitle); 
+        
 
         addExpenseBtn.addEventListener('click', async function () {
             ExpenseForm.style.display = 'block';
@@ -463,11 +471,42 @@ document.addEventListener('DOMContentLoaded', async function () {
             const note = ExpenseNote.value;
             const Expense_Title = ExpenseTitle.value;
 
+            console.log('Fetched Name:', name); // Log fetched name from server
+            console.log('Selected Person:', selectedPerson); // Log selected person
+            console.log('Amount:', amount); // Log amount
+            console.log('Note:', note); // Log note
+            console.log('Expense Title:', Expense_Title); // Log expense title
+
+
             // Function to save the contribution to the server
             await saveExpenseToDatabase(Expense_Title, username_forExpenseForm, name,selectedPerson, amount, note, ExpenseForm);
 
         });
 
-        
+    document.getElementById('BtnSummary').addEventListener('click', async () => {
+        try {
+            const response = await fetch(`${serverConfig.baseURL}/summary`);
+            const data = await response.json();
+
+            const summaryDiv = document.getElementById('summary');
+            summaryDiv.innerHTML = `
+          <h2>Summary</h2>
+          <p>Total Contribution: ${data.totalContribution}</p>
+          <p>Total Expenses: ${data.totalExpenses}</p>
+          <p>Remaining Amount: ${data.remainingAmount}</p>
+        `;
+        } catch (error) {
+            console.error('Error fetching summary:', error);
+        }
+    });
+
+    document.getElementById('Btnlogout').addEventListener('click', async () => {
+        try {
+             await fetch(`${serverConfig.baseURL}/logout`);
+            
+        } catch (error) {
+            console.error('Error fetching summary:', error);
+        }
+    });
         
 });

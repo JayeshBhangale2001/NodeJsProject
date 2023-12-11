@@ -319,7 +319,7 @@ app.use(session(sessionOptions));
 
 const dbConfig = {
     user: 'iqms',
-    password: 'iqms',
+    password: 'IQMS',
     connectString: 'dwpd02244:1521/IQORA'
 };
 
@@ -336,7 +336,13 @@ async function connectToDatabase() {
 
 connectToDatabase();
 
+const activeUsers = {}; // Object to maintain active users
 
+app.get('/active-users', (req, res) => {
+    // Retrieve data about active users, such as usernames or IDs
+    const users = Object.keys(activeUsers);
+    res.json({ activeUsers: users });
+});
 
 
 // Handle user login
@@ -345,9 +351,51 @@ app.post('/login', async (req, res) => {
     try {
         const query = `SELECT * FROM users WHERE username='${username}' AND password='${password}'`;
         const result = await connection.execute(query);
+        // Add the user to the active users list
+        activeUsers[username] = true;
         if (result.rows.length > 0) {
             req.session.username = username;
             // Redirect to Dashboard.html with the username as a query parameter
+            res.status(200).send('Login Successful');
+            //res.redirect(`/Dashboard.html?username=${username}`);
+        } else {
+            res.status(401).send('Invalid credentials');
+        }
+    } catch (err) {
+        console.error('Error during login:', err);
+        res.status(500).send('Server Error');
+    }
+});
+
+
+// Middleware function to check if user is logged in
+function requireLogin(req, res, next) {
+    if (req.session.loggedIn) {
+        next(); // User is authenticated, proceed to next middleware/route handler
+    } else {
+        res.redirect('/login2'); // Not logged in, redirect to login
+    }
+}
+
+// Apply middleware to the dashboard route
+app.get('/Dashboard', requireLogin, (req, res) => {
+    // Serve dashboard.html
+    res.sendFile(__dirname + '/Dashboard.html');
+});
+
+
+
+app.post('/login2', async (req, res) => {
+    const { username, password } = req.body;
+    try {
+        const query = `SELECT * FROM users WHERE username='${username}' AND password='${password}'`;
+        const result = await connection.execute(query);
+        // Add the user to the active users list
+        activeUsers[username] = true;
+        if (result.rows.length > 0) {
+            req.session.username = username;
+            
+            //res.status(200).send('Login Successful');
             res.redirect(`/Dashboard.html?username=${username}`);
         } else {
             res.status(401).send('Invalid credentials');
@@ -389,6 +437,20 @@ app.post('/signup', async (req, res) => {
 });
 
 
+// Logout route
+app.get('/logout', (req, res) => {
+    // Clear session
+    req.session.destroy(err => {
+        if (err) {
+            console.error('Error destroying session:', err);
+        } 
+       
+        
+    });
+    res.redirect('/index.html'); 
+});
+
+
 app.get('/teammates-birthdays', async (req, res) => {
     try {
         const connection = await oracledb.getConnection(dbConfig);
@@ -410,6 +472,31 @@ app.get('/teammates-birthdays', async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+
+app.get('/upcoming-birthdays', async (req, res) => {
+    try {
+        const connection = await oracledb.getConnection(dbConfig);
+
+        const query = `
+      SELECT Name, BirthDate 
+      FROM users_information 
+      WHERE EXTRACT(MONTH FROM BirthDate) = EXTRACT(MONTH FROM SYSDATE)
+        AND EXTRACT(DAY FROM BirthDate) BETWEEN EXTRACT(DAY FROM SYSDATE) AND EXTRACT(DAY FROM SYSDATE) + 30
+    `;
+
+        const result = await connection.execute(query);
+
+        const formattedResult = result.rows.map(row => ({
+            Name: row[0],
+            BirthDate: row[1]
+        }));
+        console.log('Query executed successfully:', formattedResult);
+        res.json(formattedResult);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 
 app.get('/user-info/:username', async (req, res) => {
     const { username } = req.params; // Get the username from the route parameter
@@ -556,16 +643,17 @@ app.get('/getProfileImage/:username', async (req, res) => {
 
 
 
-app.get('/fetchData', async (req, res) => {
+app.get('/fetchData/:username', async (req, res) => {
+    const { username } = req.params;
     try {
         const connection = await oracledb.getConnection(dbConfig);
 
         const query = `
             SELECT BirthDay_Person, Amount, Note, TO_CHAR(Contribution_Date, 'YYYY-MM-DD HH24:MI:SS') AS Contribution_Date
-            FROM Birthday_Contribution
+            FROM Birthday_Contribution where username = :username
         `;
 
-        const result = await connection.execute(query);
+        const result = await connection.execute(query, { username });
         await connection.close();
 
         const rows = result.rows.map(row => ({
@@ -738,7 +826,7 @@ app.get('/show-expenses', async (req, res) => {
     try {
         const query = `
             SELECT Expense_Title, username AS Added_By, Birthday_Person , 
-                   Amount, Note, Expense_Date
+                   Amount, Note,  TO_CHAR(Expense_Date, 'YYYY-MM-DD')
             FROM Birthday_expenses
         `;
 
@@ -772,6 +860,37 @@ app.post('/saveContribution', async (req, res) => {
         res.status(500).json({ error: 'Failed to save Contribution' }); 
     }
 });
+
+app.get('/summary', async (req, res) => {
+    try {
+        const contributionQuery = `SELECT NVL(SUM(Amount), 0) AS TOTALCONTRIBUTION FROM Birthday_Contribution`;
+        const contributionResult = await connection.execute(contributionQuery);
+        const totalContribution = contributionResult.rows[0][0]; // Get the value from the first row
+
+        console.log('Total Contribution:', totalContribution);
+
+        const expensesQuery = `SELECT NVL(SUM(Amount), 0) AS TOTALEXPENSES FROM Birthday_Expenses`;
+        const expensesResult = await connection.execute(expensesQuery);
+        const totalExpenses = expensesResult.rows[0][0]; // Get the value from the first row
+
+        console.log('Total Expenses:', totalExpenses);
+
+        const remainingAmount = totalContribution - totalExpenses;
+
+        console.log('Remaining Amount:', remainingAmount);
+
+        res.json({
+            totalContribution,
+            totalExpenses,
+            remainingAmount
+        });
+    } catch (error) {
+        console.error('Error fetching summary:', error);
+        res.status(500).json({ error: 'Failed to fetch summary' });
+    }
+});
+
+
 
 
 /*
